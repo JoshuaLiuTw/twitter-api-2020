@@ -189,6 +189,7 @@ const userController = {
       })
     ])
       .then(([user, followship]) => {
+        if (helpers.getUser(req).id === userId) return res.status(404).json({ status: 'error', message: 'You can not follow yourself' })
         if (!user) return res.status(404).json({ status: 'error', message: 'User not found' })
         if (followship) { return res.status(404).json({ status: 'error', message: 'You are already following this user!' }) }
         return Followship.create({

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
-const { Tweet, User } = require('../models')
+const { Tweet, User, Like } = require('../models')
+
 const adminController = {
   // 登入
   signIn: async (req, res, next) => {
@@ -58,23 +59,24 @@ const adminController = {
   },
   getUsers: (req, res, next) => {
     return User.findAll({
-      raw: true
-      // include: [
-      //   { model: Tweet, as: 'TweetLikes' },
-      //   { model: User, as: 'Usertweets' },
-      //   { model: User, as: 'Followers' },
-      //   { model: User, as: 'Followings' }
-      // ]
+      raw: true,
+      nest: true,
+      include: [
+        Tweet,
+        Like,
+        { model: User, as: 'Followers' },
+        { model: User, as: 'Followings' }
+      ]
     })
       .then(users => {
-        // const data = users.map(u => ({
-        //   ...u,
-        //   followersCount: User.Followers.length, // 跟隨者人數
-        //   followingsCount: User.Followings.length, // 關注人數
-        //   tweetsCount: User.Usertweets.length, // 使用者的 Tweet 累積總量
-        //   tweetLikesCount: Tweet.TweetLikes.length // 推文被 like 的數量
-        // }))
-        return res.status(200).json(users)
+        const data = users.map(user => ({
+          ...user,
+          followersCount: user.Followers.length, // 跟隨者人數
+          followingsCount: user.Followings.length, // 關注人數
+          tweetsCount: user.Tweets.length, // 使用者的 Tweet 累積總量
+          tweetLikesCount: user.Likes.length // 推文被 like 的數量
+        }))
+        return res.status(200).json(data)
       })
       .catch(err => next(err))
   }
